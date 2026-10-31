@@ -1,0 +1,25 @@
+{
+  "schedule": "0 */5 * * * *",
+  "openrouterUrl": "https://openrouter.ai/api/v1/chat/completions",
+  "openrouterModel": "nvidia/nemotron-3.5-super-vl:free",
+  "secretsIds": {
+    "openrouterApiKey": "openrouter_api_key"
+  },
+  "assets": [
+    {
+      "address": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+      "name": "Sepolia WETH (demo subject)",
+      "description": "Public Sepolia testnet WETH contract, used only as a demo screening subject. Not a real product review."
+    },
+    {
+      "address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "name": "Sepolia USDC (demo subject)",
+      "description": "Public Sepolia testnet USDC contract, used only as a demo screening subject. Not a real product review."
+    }
+  ],
+  "evm": {
+    "chainSelectorName": "ethereum-testnet-sepolia",
+    "receiverAddress": "0x93Df89F20cd1cF145AaA6f07e339c58eaC02AdEe",
+    "gasLimit": "2000000"
+  }
+}

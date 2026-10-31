@@ -8,7 +8,7 @@ dist/
 dist-ssr/
 *.tsbuildinfo
 .vite/
-
+secrets
 # Foundry (smart-contract/ has its own .gitignore too; lib/ is vendored on purpose and stays tracked)
 smart-contract/out/
 smart-contract/cache/
@@ -21,6 +21,9 @@ smart-contract/broadcast/
 *.local
 *.pem
 *.key
+cre-workflow/secrets.yaml
+cre-workflow/**/node_modules/
+cre-workflow/**/dist/
 
 # Logs
 *.log
