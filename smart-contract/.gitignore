@@ -4,3 +4,4 @@ broadcast/
 .env
 *.log
 deployments/*.json
+!deployments/sepolia.json
