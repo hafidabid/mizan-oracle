@@ -1,0 +1,12 @@
+{
+  "schedule": "0 */2 * * * *",
+  "apiBaseUrl": "https://REPLACE_WITH_VERCEL_DEPLOYMENT_URL/api",
+  "secretsIds": {
+    "workflowResolveSecret": "workflow_resolve_secret"
+  },
+  "evm": {
+    "chainSelectorName": "ethereum-testnet-sepolia",
+    "receiverAddress": "0x6B2E8925bC577B79FA7aB3182Dd54afDDDE180AD",
+    "gasLimit": "5000000"
+  }
+}
