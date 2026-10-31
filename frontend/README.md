@@ -76,3 +76,55 @@ src/
   struggle, set `renderer.shadowMap.enabled = false` when `small` is true in `world.ts`.
 - **Today.** The demo uses a fixed "today" of 29 Oct 2026 (`lib/dates.ts`) so the day counts match the
   copy. Change `TODAY` to `new Date()` to make it live.
+
+## Live dashboard (`#/dashboard`)
+
+Separate from the fictional landing-page demo, `#/dashboard` is a real dashboard reading live from
+the deployed `MizanRegistry` on Sepolia, plus a minimal serverless backend that coordinates Sharia
+board members signing an assessment before it goes onchain.
+
+- **Browse / lookup** (`#/dashboard`) — no wallet needed. Lists published assessments
+  (`assessmentCount()` + `getAssessment(id)`) and looks up any asset address via `resolve()`,
+  reading the registry directly client-side.
+- **Sharia board** (`#/dashboard/board`) — connects a wallet (any EIP-1193 provider, e.g. MetaMask),
+  checks it against `shariaBoardMembers(address)`, and if active lets that member:
+  - **Propose** an assessment for an asset (signed with `personal_sign` to authenticate as a board
+    member, not yet an onchain commitment).
+  - **Sign** a pending proposal's `Issue` with the exact EIP-712 typed data `MizanRegistry` expects
+    (`frontend/src/lib/eip712.ts`, mirrored server-side in `frontend/api/_eip712.ts`).
+
+  Once enough members sign to meet quorum, the proposal is picked up by
+  `cre-workflow/board-opinion/` — a Chainlink CRE workflow, same pattern as the AI pre-screen
+  workflow — which delivers it onchain via `MizanReceiver.onReport()` and calls back to close the
+  loop.
+
+Source: `src/components/dashboard/`, `src/lib/{chain,wallet,api,eip712,board}.ts`, and the
+serverless store at `api/*.ts` (see root README's architecture note and `api/_store.ts`).
+
+### Deploying to Vercel
+
+1. Set the environment variables in `.env.example` on the Vercel project (Project Settings →
+   Environment Variables). `SEPOLIA_RPC_URL` and `WORKFLOW_RESOLVE_SECRET` are required server-side;
+   `KV_REST_API_URL`/`KV_REST_API_TOKEN` (Vercel KV, Upstash-backed) are strongly recommended — without
+   them, pending-proposal state only lives in a single serverless invocation's memory.
+2. Deploy. Vercel auto-detects the Vite app and serves `api/*.ts` as Edge Functions alongside it, no
+   `vercel.json` needed — the dashboard's own routing is hash-based (`#/dashboard`), so there's
+   nothing for Vercel to rewrite either.
+3. Update `cre-workflow/board-opinion/config.staging.json`'s (and `config.production.json`'s)
+   `apiBaseUrl` to `https://<your-deployment>/api`, set `WORKFLOW_RESOLVE_SECRET` identically in
+   `cre-workflow/secrets.yaml` (see `secrets.yaml.example`), and run the workflow — see
+   `smart-contract/docs/CRE-WORKFLOW-PLAN.md` for the `cre workflow simulate --broadcast` pattern
+   already proven for the AI pre-screen workflow.
+
+### Local dev against the backend
+
+`npm run dev` proxies `/api` to `frontend/scripts/dev-api-server.ts` (a plain Node server wrapping
+the same `api/*.ts` handlers Vercel runs) — start it separately:
+
+```bash
+PORT=8787 npx tsx scripts/dev-api-server.ts
+```
+
+`scripts/test-board-flow.ts` and `scripts/e2e-board-flow.ts` are smoke tests that exercise the real
+propose → sign → quorum flow (the latter through an actual rendered browser page via Playwright)
+using the demo board wallets in `smart-contract/board-keys.local`.

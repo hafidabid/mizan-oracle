@@ -1,0 +1,37 @@
+{
+  "chainId": 11155111,
+  "network": "ethereum-testnet-sepolia",
+  "deployedAt": "2026-10-31",
+  "deployer": "0x922De363B0eB317bE610f4FC707eF994A011EDE3",
+  "notes": "Hackathon demo deployment. Board members are freshly generated demo wallets, not real Sharia scholars. Verified source (exact_match) on Sourcify and Etherscan for all active contracts below.",
+  "core": {
+    "registry": "0xAB7995471D8f075AE357c47AF884Ac814e6dBB38",
+    "receiver": "0x6B2E8925bC577B79FA7aB3182Dd54afDDDE180AD",
+    "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
+    "forwarderNote": "Real Chainlink mock-forwarder for ethereum-testnet-sepolia, same one proven working for AI pre-screen. Wired with the fixed simulator debug workflow identity (workflowId = 64x '1', workflowOwner = 0xaaaa...aaaa), confirmed empirically to be simulator-wide (not tied to the ai-prescreen workflow's own registration) via a direct onReport probe before this redeploy was finalized.",
+    "workflowId": "0x1111111111111111111111111111111111111111111111111111111111111111",
+    "workflowOwner": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "policyId": "0x6f13894d5d1e5c13028d89c14d39d6faf54b437eed5952ecc9044a6a5236f189",
+    "policyHash": "0xc080419d58113e62d6d16d0dd89e0c0638339bccd1af7e4b6b170034b4e13467",
+    "quorum": 3,
+    "boardSize": 5,
+    "deprecated": {
+      "registry": "0xAf43717000276acDe949C2De07643A474081E31C",
+      "receiver": "0x43520241C92a8c1FFFE29011f2A0Ad40Fa5F2491",
+      "consumer": "0x19543c9A99eC1861Ba4A97e33a28FE195C5C988E",
+      "forwarder": "0x4575af36401119405Ae4B8C67369C22C41bfB51D",
+      "reason": "Wired to a placeholder MockForwarder, not the real Chainlink forwarder, so no CRE workflow could ever deliver board opinions to it. Superseded by the registry/receiver pair above. MizanConsumer was not redeployed against the new registry — it was an example-reader contract, not used by the dashboard, which reads MizanRegistry directly."
+    }
+  },
+  "aiPreScreen": {
+    "store": "0x9952A0BBA59f1302BD9F707848c14D37C1fedE19",
+    "receiver": "0x93Df89F20cd1cF145AaA6f07e339c58eaC02AdEe",
+    "forwarder": "0x15fC6ae953E024d975e77382eEeC56A9101f9F88",
+    "forwarderNote": "Real Chainlink mock-forwarder for ethereum-testnet-sepolia (from `cre workflow supported-chains`), used by `cre workflow simulate --broadcast`. Verified live end-to-end: real OpenRouter calls, real onchain writes, readable via getPreScreen(asset).",
+    "deprecated": {
+      "store": "0x11A4d6528509ed4e840a539d5Aa78e301295CcA2",
+      "receiver": "0x868C05FC60bA5f4e5f395f19408Bd74Ddf5722E4",
+      "reason": "Wired to a placeholder MockForwarder instead of the real Sepolia mock-forwarder, so cre workflow simulate --broadcast could never actually deliver to it. Superseded by the pair above."
+    }
+  }
+}
