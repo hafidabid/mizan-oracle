@@ -11,7 +11,8 @@ certification.**
 | --- | --- |
 | [`smart-contract/`](smart-contract/) | The oracle: `MizanRegistry` (board opinions, quorum, resolve()), `MizanReceiver` (Chainlink CRE callback), the AI pre-screen pair, and tests. Start with [smart-contract/README.md](smart-contract/README.md). |
 | [`cre-workflow/ai-prescreen/`](cre-workflow/ai-prescreen/) | The Chainlink CRE workflow: fetches an asset, asks an LLM for a preliminary compliance screen, writes the result onchain. Verified working end-to-end against live Sepolia contracts. |
-| [`frontend/`](frontend/) | Landing page / demo UI. See [frontend/README.md](frontend/README.md). |
+| [`cre-workflow/board-opinion/`](cre-workflow/board-opinion/) | The Chainlink CRE workflow that delivers board-signed opinions onchain: polls the dashboard's backend for quorum-reached proposals, writes them through `MizanReceiver`. |
+| [`frontend/`](frontend/) | Landing page / demo UI, **and** the live dashboard at `#/dashboard` (wallet connect, board propose/sign, browse/lookup real onchain assessments) plus its minimal serverless backend (`frontend/api/`). See [frontend/README.md](frontend/README.md). |
 | [`design-reviews/`](design-reviews/) | UX/trust/motion/a11y review notes. |
 
 ## Deployed on Sepolia

@@ -103,6 +103,9 @@ export function Nav({ active }: { active: SectionId }) {
         <a className="btn btn-primary nav-cta" href="#register">
           Browse records
         </a>
+        <a className="btn nav-cta" href="#/dashboard">
+          Live dashboard
+        </a>
       </div>
       <div className="nav-line" aria-hidden="true">
         <i />

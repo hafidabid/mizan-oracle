@@ -15,12 +15,16 @@ import { Builders } from './components/Builders';
 import { Request } from './components/Request';
 import { Footer } from './components/Footer';
 import { RecordModal } from './components/RecordModal';
+import { Dashboard } from './components/dashboard/Dashboard';
 
 /** Records are addressable as #record/MZN-004, so they can be shared and Back closes them. */
 const recordFromHash = () => {
   const m = /^#record\/(MZN-\d+)$/.exec(window.location.hash);
   return m ? findByRec(m[1])?.id ?? null : null;
 };
+
+/** The dashboard is a standalone route (#/dashboard, #/dashboard/board), not a modal. */
+const isDashboardHash = () => window.location.hash.startsWith('#/dashboard');
 
 export default function App() {
   const reduceMotion = useReducedMotion();
@@ -31,6 +35,7 @@ export default function App() {
   const staticMode = reduceMotion || compact || !webgl;
   const [chosen, setChosen] = useState<HeroProductId>('token');
   const [record, setRecord] = useState<string | null>(recordFromHash);
+  const [dashboard, setDashboard] = useState<boolean>(isDashboardHash);
 
   const how = useRef<HTMLElement>(null);
   const howPanel = useRef<HTMLDivElement>(null);
@@ -42,7 +47,10 @@ export default function App() {
   const scroll = useScrollModel(sections, staticMode);
 
   useEffect(() => {
-    const sync = () => setRecord(recordFromHash());
+    const sync = () => {
+      setRecord(recordFromHash());
+      setDashboard(isDashboardHash());
+    };
     window.addEventListener('popstate', sync);
     window.addEventListener('hashchange', sync);
     return () => {
@@ -66,6 +74,8 @@ export default function App() {
     setRecord(null);
   }, []);
   const onFail = useCallback(() => setWebgl(false), []);
+
+  if (dashboard) return <Dashboard />;
 
   return (
     <div className={staticMode ? 'mode-static' : 'mode-3d'}>

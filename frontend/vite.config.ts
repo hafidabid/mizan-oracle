@@ -12,4 +12,9 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    // Vercel serves api/*.ts same-origin in production; this mirrors that locally against
+    // frontend/scripts/dev-api-server.ts so the dashboard behaves the same in dev.
+    proxy: { '/api': 'http://localhost:8787' },
+  },
 });
