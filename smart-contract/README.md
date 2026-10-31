@@ -2,7 +2,10 @@
 
 Each member of a Sharia board signs their own opinion on an assessment. A delivery receiver authenticates its transport. A registry verifies every Sharia board member signature, records who gave which opinion and how many, even when the board is split, and only lets an outcome take effect when a quorum agrees with it. Applications read the latest result and apply their own rules.
 
-**This is the onchain portion of Mizan, not a complete CRE workflow or real Sharia certification.** The local demo uses a restricted mock forwarder and identity-only mock assets. No funds are held and no trades are executed.
+This is the onchain portion of Mizan — deployed and source-verified on Sepolia, see the
+[root README's deployment table](../README.md#deployed-on-sepolia) for addresses, and driven by two
+real Chainlink CRE workflows (see `cre-workflow/`). **It is a hackathon demo, not a real Sharia
+certification;** no funds are held and no trades are executed.
 
 ## Start here
 
@@ -46,12 +49,10 @@ lib/                          Pinned dependencies, including licenses
 ## Deliberately small scope
 
 - One Sharia board (up to 32 active, owner-managed roster and quorum), one immutable policy, one chain per deployment.
-- EOA Sharia board member keys; EIP-1271 smart-account signatures are not implemented.
-- No proxy, DAO, token economics, payment handling, Uniswap dependency, or automatic product-upgrade monitoring.
 - Normal updates must arrive through the configured receiver. Board and transport authorization are separate checks.
 - `Approved`, `expired`, `revoked`, and `boardActive` are separate facts. Expiry is not a new religious judgment.
 
-The contracts compile for Ethereum-compatible EVMs using Solidity 0.8.24 and the Paris EVM target. Anvil deployment is tested; public Ethereum deployment and live Chainlink transport are not claimed. Review configuration and obtain independent security/professional review before production use.
+The contracts compile for Ethereum-compatible EVMs using Solidity 0.8.24 and the Paris EVM target, with both an Anvil smoke test and a live Sepolia deployment behind real Chainlink CRE transport. Review configuration and obtain independent security/professional review before production use.
 
 ## Dependencies and license
 

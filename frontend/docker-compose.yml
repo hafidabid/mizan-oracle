@@ -1,0 +1,58 @@
+# Self-hosted deploy of the board-opinion backend (frontend/api/*.ts), as an alternative
+# to Vercel. Serves the same propose/sign/pending/resolve handlers from scripts/serve-api.ts.
+#
+# Quick start:
+#   cp .env.example .env   # fill in SEPOLIA_RPC_URL and WORKFLOW_RESOLVE_SECRET at least
+#   docker compose up -d --build
+#
+# This does NOT serve the static frontend — point your existing frontend's
+# VITE_MIZAN_API_BASE_URL at this container's origin, or put both behind one reverse proxy
+# so they share an origin (recommended: avoids needing CORS headers, same as Vercel's
+# single-project setup).
+#
+# No external KV needed by default: set KV_REST_API_URL/KV_REST_API_TOKEN in .env to a
+# hosted Upstash project for real persistence. To self-host KV instead (no external
+# account), run with the "kv" profile, which adds a Redis instance behind an
+# Upstash-REST-compatible shim that api/_kv.ts talks to unmodified:
+#   docker compose --profile kv up -d --build
+# then set in .env: KV_REST_API_URL=http://redis-http:80, KV_REST_API_TOKEN=<any-string>.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - '${PORT:-8787}:8787'
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://localhost:8787/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Self-hosted KV (optional — `docker compose --profile kv up`). Gives api/_kv.ts's
+  # UpstashKV a real Redis-backed REST endpoint without needing an Upstash account.
+  redis:
+    image: redis:7-alpine
+    profiles: ['kv']
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+
+  redis-http:
+    image: hiett/serverless-redis-http:latest
+    profiles: ['kv']
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${KV_REST_API_TOKEN:-dev-token}
+      SRH_CONNECTION_STRING: redis://redis:6379
+
+volumes:
+  redis-data:

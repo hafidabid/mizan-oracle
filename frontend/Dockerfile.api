@@ -1,0 +1,23 @@
+# Self-hosted backend for frontend/api/*.ts (the board-opinion propose/sign/pending/resolve
+# endpoints). Vercel normally runs these as Edge Functions; this container runs the same
+# files directly under Node via tsx, wrapped by scripts/serve-api.ts. It does NOT build or
+# serve the Vite frontend — see docker-compose.yml if you need that too.
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY api ./api
+COPY scripts/serve-api.ts ./scripts/serve-api.ts
+
+ENV NODE_ENV=production \
+	PORT=8787 \
+	HOST=0.0.0.0
+
+EXPOSE 8787
+
+USER node
+
+CMD ["npx", "tsx", "scripts/serve-api.ts"]
