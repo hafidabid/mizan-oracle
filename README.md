@@ -22,11 +22,15 @@ deployment details including the policy hash and CRE wiring.
 
 | Contract | Address |
 | --- | --- |
-| MizanRegistry | [`0xAf43717000276acDe949C2De07643A474081E31C`](https://sepolia.etherscan.io/address/0xAf43717000276acDe949C2De07643A474081E31C) |
-| MizanReceiver | [`0x43520241C92a8c1FFFE29011f2A0Ad40Fa5F2491`](https://sepolia.etherscan.io/address/0x43520241C92a8c1FFFE29011f2A0Ad40Fa5F2491) |
-| MizanConsumer | [`0x19543c9A99eC1861Ba4A97e33a28FE195C5C988E`](https://sepolia.etherscan.io/address/0x19543c9A99eC1861Ba4A97e33a28FE195C5C988E) |
+| MizanRegistry | [`0xAB7995471D8f075AE357c47AF884Ac814e6dBB38`](https://sepolia.etherscan.io/address/0xAB7995471D8f075AE357c47AF884Ac814e6dBB38) |
+| MizanReceiver | [`0x6B2E8925bC577B79FA7aB3182Dd54afDDDE180AD`](https://sepolia.etherscan.io/address/0x6B2E8925bC577B79FA7aB3182Dd54afDDDE180AD) |
 | MizanAIPreScreen | [`0x9952A0BBA59f1302BD9F707848c14D37C1fedE19`](https://sepolia.etherscan.io/address/0x9952A0BBA59f1302BD9F707848c14D37C1fedE19) |
 | MizanAIReceiver | [`0x93Df89F20cd1cF145AaA6f07e339c58eaC02AdEe`](https://sepolia.etherscan.io/address/0x93Df89F20cd1cF145AaA6f07e339c58eaC02AdEe) |
+
+`MizanRegistry`/`MizanReceiver` were redeployed from an earlier pair to wire the receiver to the
+real Chainlink forwarder (the original deployment's forwarder was a placeholder). See
+[smart-contract/deployments/sepolia.json](smart-contract/deployments/sepolia.json) for the
+superseded addresses and why.
 
 `MizanAIPreScreen`/`MizanAIReceiver` are deliberately separate from `MizanRegistry` — different
 contract, different ABI shape — so an AI pre-screen can never be mistaken for a board ruling.
