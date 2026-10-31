@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Mizan Oracle Works</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: one long explainer with two animated diagrams (contracts, business),
+   each paired with a step list that is fully readable at rest and highlighted as it plays. */
+:root {
+  --paper: #f6f2e8;
+  --surface: #fffdf7;
+  --ink: #1d2a28;
+  --muted: #5a6865;
+  --line: #d6cfbf;
+  --teal: #0e5c57;
+  --teal-soft: #dcebe6;
+  --amber: #9a5f0c;
+  --amber-soft: #f6e7cc;
+  --red: #9c3526;
+  --red-soft: #f5dcd5;
+  --font-body: "Avenir Next", "Avenir", "Nunito Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111918; --surface: #17211f; --ink: #e8e3d6; --muted: #9eaca8; --line: #33423f;
+    --teal: #63c2b5; --teal-soft: #1b3531; --amber: #e2ad57; --amber-soft: #3a2d17;
+    --red: #ec8f7f; --red-soft: #3d201b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111918; --surface: #17211f; --ink: #e8e3d6; --muted: #9eaca8; --line: #33423f;
+  --teal: #63c2b5; --teal-soft: #1b3531; --amber: #e2ad57; --amber-soft: #3a2d17;
+  --red: #ec8f7f; --red-soft: #3d201b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+}
+a { color: var(--teal); }
+:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; border-radius: 4px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 800; }
+p { margin: 0; max-width: 65ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+
+header.top { padding: 48px 0 28px; display: grid; gap: 16px; }
+.lede { font-size: 1.2rem; color: var(--muted); }
+.lede strong { color: var(--ink); }
+.jump { display: flex; flex-wrap: wrap; gap: 10px; }
+.jump a {
+  text-decoration: none; padding: 8px 14px; border: 1.5px solid var(--teal);
+  border-radius: 999px; font-weight: 600; font-size: 0.95rem;
+}
+.jump a:hover { background: var(--teal-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 0.9rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 22px; height: 14px; border-radius: 4px; border: 2px solid var(--teal); background: var(--teal-soft); }
+.sw.planned { border-style: dashed; border-color: var(--muted); background: transparent; }
+.sw.mock { border-color: var(--amber); background: var(--amber-soft); }
+
+section.part { padding: 36px 0 44px; border-top: 1px solid var(--line); display: grid; gap: 22px; }
+.part-head { display: grid; gap: 8px; }
+.kicker { font-size: 0.82rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); }
+
+/* Diagram + stepper */
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 16px; }
+.diagram { overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 760px; height: auto; color: var(--ink); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.controls button {
+  font: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+  padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--teal);
+  background: var(--surface); color: var(--teal);
+}
+.controls button[data-act="play"] { background: var(--teal); color: var(--surface); min-width: 84px; }
+.controls button:hover { filter: brightness(1.05); }
+.count { margin-left: auto; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: s; }
+ol.steps > li {
+  counter-increment: s; display: grid; grid-template-columns: 32px 1fr; gap: 4px 12px;
+  padding: 12px 14px; border-radius: 10px; border: 1.5px solid transparent; cursor: pointer;
+}
+ol.steps > li::before {
+  content: counter(s); grid-row: span 3; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font-weight: 800; font-size: 0.85rem;
+  border: 1.5px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums;
+}
+ol.steps > li.on { border-color: var(--teal); background: var(--teal-soft); }
+ol.steps > li.on::before { background: var(--teal); border-color: var(--teal); color: var(--surface); }
+.step-title { font-weight: 800; }
+.step-text { color: var(--ink); }
+.more { margin-top: 6px; font-size: 0.93rem; color: var(--muted); display: grid; gap: 6px; }
+.more ul { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
+.js ol.steps > li:not(.on) .more { display: none; }
+.tag { display: inline-block; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 1px 7px; border-radius: 5px; margin-left: 6px; vertical-align: 2px; }
+.tag.built { background: var(--teal-soft); color: var(--teal); }
+.tag.planned { border: 1.5px dashed var(--muted); color: var(--muted); }
+.tag.mock { background: var(--amber-soft); color: var(--amber); }
+
+.split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+/* SVG styling */
+.node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: fill .4s, stroke .4s; }
+.node.built rect { stroke: var(--teal); }
+.node.planned rect { stroke: var(--muted); stroke-dasharray: 6 5; }
+.node.mock rect { stroke: var(--amber); }
+.node.on rect { fill: var(--teal-soft); stroke: var(--teal); stroke-width: 3; }
+.node .t { font: 800 14px var(--font-body); fill: var(--ink); }
+.node .s { font: 400 12px var(--font-body); fill: var(--muted); }
+.status { font: 800 10px var(--font-body); letter-spacing: 0.08em; fill: var(--muted); }
+.status.built { fill: var(--teal); }
+.status.mock { fill: var(--amber); }
+.edge { stroke: var(--line); stroke-width: 2; fill: none; transition: stroke .4s; }
+.edge.on { stroke: var(--teal); stroke-width: 3; }
+.elabel { font: 600 12px var(--font-body); fill: var(--muted); }
+.elabel.on { fill: var(--teal); }
+.arrowhead { fill: var(--line); }
+.rail { stroke: var(--line); stroke-width: 2; stroke-dasharray: 2 6; }
+#packet { transition: transform .9s cubic-bezier(.45,0,.2,1); }
+#packet circle { fill: var(--teal); }
+#packet .pl { font: 600 12px var(--font-mono); fill: var(--teal); }
+.member circle { fill: var(--surface); stroke: var(--teal); stroke-width: 1.5; transition: fill .4s; }
+.member text { font: 800 10px var(--font-body); fill: var(--teal); }
+.member.signed circle { fill: var(--teal); }
+.member.signed text { fill: var(--surface); }
+.member.nr.signed circle { fill: var(--amber); stroke: var(--amber); }
+
+/* Panels */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: grid; gap: 14px; }
+.panel > p { color: var(--muted); }
+.members { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .members { grid-template-columns: 1fr; } }
+label { font-weight: 600; font-size: 0.92rem; display: grid; gap: 4px; }
+select {
+  font: inherit; font-size: 0.95rem; padding: 7px 9px; border-radius: 8px;
+  border: 1.5px solid var(--line); background: var(--paper); color: var(--ink);
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 4px 10px; border-radius: 999px; font-size: 0.88rem; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid var(--line); }
+.chip.a { background: var(--teal-soft); color: var(--teal); border-color: transparent; }
+.chip.r { background: var(--red-soft); color: var(--red); border-color: transparent; }
+.chip.n { background: var(--amber-soft); color: var(--amber); border-color: transparent; }
+.verdict { border-radius: 10px; padding: 12px 14px; border-left: 5px solid var(--teal); background: var(--teal-soft); display: grid; gap: 4px; }
+.verdict.fail { border-left-color: var(--red); background: var(--red-soft); }
+.verdict.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+.verdict strong { font-size: 1.02rem; }
+.verdict code { color: inherit; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+.tablewrap { overflow-x: auto; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--paper); }
+tbody tr.on { background: var(--teal-soft); }
+tbody tr.on td:first-child { box-shadow: inset 4px 0 0 var(--teal); }
+td.allow, td.block { font-weight: 800; text-align: center; }
+td.allow { color: var(--teal); }
+td.block { color: var(--red); }
+pre.read {
+  margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.55; overflow-x: auto; white-space: pre;
+}
+pre.read .k { color: var(--muted); }
+pre.read .v { color: var(--teal); font-weight: 600; }
+pre.read .x { color: var(--red); font-weight: 600; }
+
+.roles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .roles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .roles { grid-template-columns: 1fr; } }
+.role { border-top: 4px solid var(--teal); background: var(--surface); border-radius: 0 0 12px 12px; padding: 14px; display: grid; gap: 6px; align-content: start; }
+.role .who { font-weight: 800; }
+.role p { font-size: 0.93rem; color: var(--muted); }
+.role .decides { font-size: 0.93rem; }
+
+.money td:last-child, .money th:last-child { white-space: nowrap; }
+.money tbody tr { cursor: default; }
+.money tbody tr:hover { background: transparent; }
+
+footer { border-top: 1px solid var(--line); padding: 26px 0 48px; color: var(--muted); font-size: 0.92rem; display: grid; gap: 8px; }
+footer ul { margin: 0; padding-left: 18px; display: grid; gap: 3px; }
+
+/* Part 4: submission plan */
+.team-note { border: 2px dashed var(--amber); background: var(--amber-soft); color: var(--ink); border-radius: 12px; padding: 12px 16px; display: grid; gap: 4px; }
+.team-note strong { color: var(--amber); }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .facts { grid-template-columns: 1fr; } }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 4px; align-content: start; }
+.fact .label { font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.fact .big { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.fact .small { font-size: 0.88rem; color: var(--muted); }
+.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.check li { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.check li:last-child { border-bottom: 0; }
+.pill { font-size: 0.74rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; text-align: center; padding: 3px 0; border-radius: 6px; }
+.pill.ok { background: var(--teal-soft); color: var(--teal); }
+.pill.todo { background: var(--red-soft); color: var(--red); }
+.pill.part { background: var(--amber-soft); color: var(--amber); }
+.check li span:last-child { font-size: 0.95rem; }
+.check li em { color: var(--muted); font-style: normal; }
+.plan { display: grid; gap: 0; }
+.plan .row { display: grid; grid-template-columns: 128px 1fr; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.plan .row:last-child { border-bottom: 0; }
+.plan .when { font-family: var(--font-mono); font-size: 0.86rem; color: var(--teal); font-weight: 600; font-variant-numeric: tabular-nums; }
+.plan .what strong { display: block; }
+.plan .what span { color: var(--muted); font-size: 0.93rem; }
+@media (max-width: 520px) { .plan .row, .check li { grid-template-columns: 1fr; gap: 4px; } }
+.slides { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; counter-reset: sl; }
+.slide { counter-increment: sl; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 6px; align-content: start; aspect-ratio: 16 / 10; overflow: auto; }
+.slide::before { content: "Slide " counter(sl); font-size: 0.74rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); }
+.slide b { font-size: 1rem; line-height: 1.3; }
+.slide span { font-size: 0.88rem; color: var(--muted); }
+.script td:first-child { font-family: var(--font-mono); font-size: 0.84rem; white-space: nowrap; color: var(--teal); font-weight: 600; }
+.script td:nth-child(3) { font-style: italic; }
+.script tbody tr { cursor: default; }
+.script tbody tr:hover { background: transparent; }
+.copybox { display: grid; gap: 8px; }
+.copybox .text { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; white-space: pre-wrap; font-size: 0.95rem; }
+.copybox button { justify-self: start; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--teal); background: var(--surface); color: var(--teal); }
+.qa { display: grid; gap: 10px; }
+.qa details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.qa summary { font-weight: 800; cursor: pointer; }
+.qa details p { margin-top: 8px; color: var(--ink); }
+.edge-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.edge-item { border-left: 4px solid var(--teal); background: var(--surface); border-radius: 0 10px 10px 0; padding: 12px 14px; display: grid; gap: 4px; }
+.edge-item b { font-size: 1rem; }
+.edge-item span { font-size: 0.92rem; color: var(--muted); }
+.dont { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.dont li { padding-left: 26px; position: relative; }
+.dont li::before { content: "✕"; position: absolute; left: 4px; color: var(--red); font-weight: 800; }
+
+@media (prefers-reduced-motion: reduce) {
+  #packet, .node rect, .edge, .member circle { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <span class="kicker">Mizan Oracle · how it works</span>
+  <h1>A Sharia board decides. Mizan keeps the record and shares its status.</h1>
+  <p class="lede">Each member of a Sharia board signs their <strong>own</strong> opinion on a DeFi product. Mizan checks every signature, counts the opinions, and stores <strong>who said what</strong> on the blockchain. Apps then read the result and apply their own rules.</p>
+  <nav class="jump" aria-label="Sections">
+    <a href="#contracts">1. Inside the smart contracts</a>
+    <a href="#rules">2. What apps read</a>
+    <a href="#business">3. Across the business</a>
+    <a href="#submit">4. How we present it</a>
+  </nav>
+  <div class="legend" aria-label="Legend">
+    <span><i class="sw"></i>Built and tested locally</span>
+    <span><i class="sw planned"></i>Planned, not built yet</span>
+    <span><i class="sw mock"></i>Mock used for the local demo</span>
+  </div>
+</header>
+
+<!-- ============ PART 1: CONTRACTS ============ -->
+<section class="part" id="contracts" aria-labelledby="contracts-h">
+  <div class="part-head">
+    <span class="kicker">Part 1 · smart contract flow</span>
+    <h2 id="contracts-h">From signed opinions to an on-chain record</h2>
+    <p>Follow one assessment. In this example, three mock board members review a product: two say <em>Approved</em>, one says <em>Needs review</em>. The board needs at least 2 matching opinions (the quorum).</p>
+  </div>
+
+  <div class="stage" id="flow">
+    <figure class="diagram" style="margin:0">
+      <svg viewBox="0 0 1080 250" role="img" aria-label="An assessment moves from board members through the assessment API, the CRE workflow, the forwarder and the receiver into the registry, where apps read it.">
+        <defs>
+          <marker id="ah1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="arrowhead"/>
+          </marker>
+        </defs>
+
+        <!-- status labels -->
+        <text class="status built" x="76" y="52" text-anchor="middle">BUILT</text>
+        <text class="status" x="228" y="52" text-anchor="middle">PLANNED</text>
+        <text class="status" x="380" y="52" text-anchor="middle">PLANNED</text>
+        <text class="status mock" x="532" y="52" text-anchor="middle">MOCK LOCALLY</text>
+        <text class="status built" x="684" y="52" text-anchor="middle">BUILT</text>
+        <text class="status built" x="836" y="52" text-anchor="middle">BUILT</text>
+        <text class="status built" x="988" y="52" text-anchor="middle">BUILT</text>
+
+        <g class="node built" data-node="0">
+          <rect x="12" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="76" y="84" text-anchor="middle">Board members</text>
+          <g class="member" data-m="1"><circle cx="46" cy="116" r="15"/><text x="46" y="120" text-anchor="middle">M1</text></g>
+          <g class="member nr" data-m="2"><circle cx="76" cy="116" r="15"/><text x="76" y="120" text-anchor="middle">M2</text></g>
+          <g class="member" data-m="3"><circle cx="106" cy="116" r="15"/><text x="106" y="120" text-anchor="middle">M3</text></g>
+          <text class="s" x="76" y="154" text-anchor="middle">each signs own opinion</text>
+        </g>
+        <g class="node planned" data-node="1">
+          <rect x="164" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="228" y="104" text-anchor="middle">Assessment</text>
+          <text class="t" x="228" y="122" text-anchor="middle">API</text>
+          <text class="s" x="228" y="146" text-anchor="middle">serves signed package</text>
+        </g>
+        <g class="node planned" data-node="2">
+          <rect x="316" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="380" y="104" text-anchor="middle">CRE</text>
+          <text class="t" x="380" y="122" text-anchor="middle">workflow</text>
+          <text class="s" x="380" y="146" text-anchor="middle">builds report v2</text>
+        </g>
+        <g class="node mock" data-node="3">
+          <rect x="468" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="532" y="104" text-anchor="middle">Chainlink</text>
+          <text class="t" x="532" y="122" text-anchor="middle">forwarder</text>
+          <text class="s" x="532" y="146" text-anchor="middle">calls onReport()</text>
+        </g>
+        <g class="node built" data-node="4">
+          <rect x="620" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="684" y="104" text-anchor="middle">Mizan</text>
+          <text class="t" x="684" y="122" text-anchor="middle">Receiver</text>
+          <text class="s" x="684" y="146" text-anchor="middle">checks transport</text>
+        </g>
+        <g class="node built" data-node="5">
+          <rect x="772" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="836" y="104" text-anchor="middle">Mizan</text>
+          <text class="t" x="836" y="122" text-anchor="middle">Registry</text>
+          <text class="s" x="836" y="146" text-anchor="middle">checks signatures</text>
+        </g>
+        <g class="node built" data-node="6">
+          <rect x="924" y="62" width="128" height="104" rx="12"/>
+          <text class="t" x="988" y="104" text-anchor="middle">Apps</text>
+          <text class="t" x="988" y="122" text-anchor="middle">&amp; explorer</text>
+          <text class="s" x="988" y="146" text-anchor="middle">read resolve()</text>
+        </g>
+
+        <!-- arrows between nodes -->
+        <line class="edge" data-edge="0" x1="141" y1="114" x2="162" y2="114" marker-end="url(#ah1)"/>
+        <line class="edge" data-edge="1" x1="293" y1="114" x2="314" y2="114" marker-end="url(#ah1)"/>
+        <line class="edge" data-edge="2" x1="445" y1="114" x2="466" y2="114" marker-end="url(#ah1)"/>
+        <line class="edge" data-edge="3" x1="597" y1="114" x2="618" y2="114" marker-end="url(#ah1)"/>
+        <line class="edge" data-edge="4" x1="749" y1="114" x2="770" y2="114" marker-end="url(#ah1)"/>
+        <line class="edge" data-edge="5" x1="901" y1="114" x2="922" y2="114" marker-end="url(#ah1)"/>
+
+        <!-- rail and moving packet -->
+        <line class="rail" x1="76" y1="206" x2="988" y2="206"/>
+        <g id="packet" transform="translate(76 0)">
+          <line x1="0" y1="168" x2="0" y2="196" stroke="currentColor" stroke-opacity=".25" stroke-width="2"/>
+          <circle cx="0" cy="206" r="9"/>
+          <text class="pl" x="0" y="236" text-anchor="middle" id="packet-label">3 signed opinions</text>
+        </g>
+      </svg>
+    </figure>
+
+    <div class="controls">
+      <button type="button" data-act="play" aria-pressed="false">Play</button>
+      <button type="button" data-act="back">Back</button>
+      <button type="button" data-act="next">Next</button>
+      <span class="count" data-count>8 steps</span>
+    </div>
+
+    <ol class="steps">
+      <li data-step="0">
+        <span class="step-title">Each board member signs their own opinion <span class="tag built">built</span></span>
+        <span class="step-text">M1 and M3 sign <em>Approved</em>. M2 signs <em>Needs review</em>. A different opinion is still signed and kept.</span>
+        <div class="more">
+          <p>Each signature is a typed EIP-712 message, <code>ShariaBoardMemberOpinion(Issue issue, uint8 opinion)</code>. The <code>Issue</code> covers the product address, version, final outcome, evidence file hash and link, dates, the previous record ID and a one-time number (nonce).</p>
+          <p>Change any field later and the signature stops matching.</p>
+        </div>
+      </li>
+      <li data-step="1">
+        <span class="step-title">The assessment API serves the signed package <span class="tag planned">planned</span></span>
+        <span class="step-text">The signed opinions and the public evidence file are made available from a fixed address.</span>
+        <div class="more"><p>Not built yet. The API can deliver signatures but cannot change them.</p></div>
+      </li>
+      <li data-step="2">
+        <span class="step-title">The CRE workflow builds the report <span class="tag planned">planned</span></span>
+        <span class="step-text">Chainlink CRE fetches the package, checks the chain for the current record, and encodes a version 2 report.</span>
+        <div class="more">
+          <p>Report = <code>(2, action 0, Issue, Opinion[])</code>. Opinions are sorted by member address so nobody can be counted twice.</p>
+          <p>Not built yet. This is the next task for the CRE bounty.</p>
+        </div>
+      </li>
+      <li data-step="3">
+        <span class="step-title">The forwarder delivers it on-chain <span class="tag mock">mock locally</span></span>
+        <span class="step-text">The Chainlink forwarder calls <code>onReport(metadata, report)</code> on the Mizan receiver.</span>
+        <div class="more"><p>In the local demo a <code>MockForwarder</code> stands in. It checks nothing and is for Anvil only.</p></div>
+      </li>
+      <li data-step="4">
+        <span class="step-title">The receiver checks <em>how</em> it arrived <span class="tag built">built</span></span>
+        <span class="step-text">It only accepts the trusted forwarder and the expected workflow.</span>
+        <div class="more">
+          <ul>
+            <li>Caller is the configured forwarder</li>
+            <li>Workflow ID and workflow owner match</li>
+            <li>Report version is 2 and action is issue (0) or revoke (1)</li>
+            <li>Then it calls the registry. It makes no other calls.</li>
+          </ul>
+        </div>
+      </li>
+      <li data-step="5">
+        <span class="step-title">The registry checks <em>who</em> signed <span class="tag built">built</span></span>
+        <span class="step-text">Every opinion must come from an active board member with a valid signature. At least 2 members must sign.</span>
+        <div class="more">
+          <ul>
+            <li>Caller is the receiver, and the board is not suspended</li>
+            <li>Product has code, the dates make sense, the evidence link is 1–512 bytes</li>
+            <li><code>previousId</code> equals the current latest record (no stale update)</li>
+            <li>Delivery deadline not passed, nonce never used</li>
+            <li>Members in ascending address order, each active, each signature valid</li>
+            <li>2 members or more signed ✓</li>
+            <li>2 opinions match the proposed “Approved”, so it takes effect ✓ (if not, the record is still stored, as “Needs review”)</li>
+          </ul>
+        </div>
+      </li>
+      <li data-step="6">
+        <span class="step-title">The registry stores the record and the opinions <span class="tag built">built</span></span>
+        <span class="step-text">Record #1 keeps each member's opinion and the count: 2 approved, 0 rejected, 1 needs review, out of a board of 3.</span>
+        <div class="more">
+          <p><code>getOpinions(1)</code> → (M1, Approved), (M2, NeedsReview), (M3, Approved). The latest pointer for the product moves to #1. Older records stay readable forever.</p>
+        </div>
+      </li>
+      <li data-step="7">
+        <span class="step-title">Apps read the facts and decide <span class="tag built">built</span></span>
+        <span class="step-text"><code>resolve(product)</code> returns the outcome, whether it has expired or been revoked, whether the board is active, and the count of opinions.</span>
+        <div class="more"><p>Each app chooses its own rule. See part 2.</p></div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="panel" id="quorum" aria-labelledby="quorum-h">
+    <h3 id="quorum-h">Try it: what does the registry store?</h3>
+    <p>Change each member's opinion and the proposed outcome. This uses the same rule as the registry (quorum 2 of 3). The counts and names are public whenever at least 2 members sign, even if they disagree.</p>
+    <div class="members">
+      <label for="m1">Mock Board Member 1
+        <select id="m1"><option value="A" selected>Approved</option><option value="R">Rejected</option><option value="N">Needs review</option><option value="X">Did not sign</option></select>
+      </label>
+      <label for="m2">Mock Board Member 2
+        <select id="m2"><option value="A">Approved</option><option value="R">Rejected</option><option value="N" selected>Needs review</option><option value="X">Did not sign</option></select>
+      </label>
+      <label for="m3">Mock Board Member 3
+        <select id="m3"><option value="A" selected>Approved</option><option value="R">Rejected</option><option value="N">Needs review</option><option value="X">Did not sign</option></select>
+      </label>
+    </div>
+    <label for="outcome" style="max-width:320px">Proposed outcome
+      <select id="outcome"><option value="A" selected>Approved</option><option value="R">Rejected</option><option value="N">Needs review</option></select>
+    </label>
+    <div class="chips" id="q-chips" aria-live="polite">
+      <span class="chip a">2 approved</span><span class="chip r">0 rejected</span><span class="chip n">1 needs review</span><span class="chip">0 did not sign</span>
+    </div>
+    <div class="verdict" id="q-verdict" aria-live="polite">
+      <strong>Stored as “Approved”.</strong>
+      <span>2 of 3 members support “Approved”. Quorum is 2. The “Needs review” opinion is stored too.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 2: RULES ============ -->
+<section class="part" id="rules" aria-labelledby="rules-h">
+  <div class="part-head">
+    <span class="kicker">Part 2 · what apps read</span>
+    <h2 id="rules-h">Same facts, different app rules</h2>
+    <p>Mizan does not say “allowed” or “halal”. It returns separate facts. Each app picks one of three example rules. Choose a row to see what <code>resolve()</code> returns.</p>
+  </div>
+
+  <div class="split">
+    <div class="panel">
+      <div class="tablewrap">
+        <table id="matrix">
+          <thead>
+            <tr><th scope="col">Latest record</th><th scope="col">No rule (0)</th><th scope="col">Prior approval (1)</th><th scope="col">Current approval (2)</th></tr>
+          </thead>
+          <tbody>
+            <tr data-state="none" tabindex="0"><td>Never assessed</td><td class="allow">Allow</td><td class="block">Block</td><td class="block">Block</td></tr>
+            <tr data-state="current" tabindex="0" class="on"><td>Approved, still valid</td><td class="allow">Allow</td><td class="allow">Allow</td><td class="allow">Allow</td></tr>
+            <tr data-state="expired" tabindex="0"><td>Approved, expired</td><td class="allow">Allow</td><td class="allow">Allow</td><td class="block">Block</td></tr>
+            <tr data-state="split" tabindex="0"><td>Board split, no agreement</td><td class="allow">Allow</td><td class="block">Block</td><td class="block">Block</td></tr>
+            <tr data-state="review" tabindex="0"><td>Rejected or needs review</td><td class="allow">Allow</td><td class="block">Block</td><td class="block">Block</td></tr>
+            <tr data-state="revoked" tabindex="0"><td>Revoked by the board</td><td class="allow">Allow</td><td class="block">Block</td><td class="block">Block</td></tr>
+            <tr data-state="suspended" tabindex="0"><td>Board suspended</td><td class="allow">Allow</td><td class="block">Block</td><td class="block">Block</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:.92rem;color:var(--muted)">“Allow” only means the app's gate lets the user continue. It is not a certificate. Expiry needs no transaction: the contract compares the expiry date with the current block time.</p>
+    </div>
+    <div class="panel">
+      <h3 id="read-h">resolve(product)</h3>
+      <pre class="read" id="read" aria-labelledby="read-h"><span class="k">exists        </span> <span class="v">true</span>
+<span class="k">assessmentId  </span> <span class="v">1</span>
+<span class="k">outcome       </span> <span class="v">Approved</span>
+<span class="k">expired       </span> <span class="v">false</span>
+<span class="k">revoked       </span> <span class="v">false</span>
+<span class="k">boardActive   </span> <span class="v">true</span>
+<span class="k">tally         </span> <span class="v">2 approved · 0 rejected · 1 needs review</span>
+<span class="k">              </span> <span class="v">quorum 2 · board of 3 · quorumMet true</span>
+<span class="k">evidenceURI   </span> <span class="v">ipfs://…/review.json</span></pre>
+      <p id="read-note">The board approved. The approval is still within its review period.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 3: BUSINESS ============ -->
+<section class="part" id="business" aria-labelledby="business-h">
+  <div class="part-head">
+    <span class="kicker">Part 3 · business-wide</span>
+    <h2 id="business-h">Who does what, from a product to a user's decision</h2>
+    <p>Mizan sits between the people who review a product and the people and apps that rely on that review. The board keeps authority. Mizan makes the result easy to find, check and use.</p>
+  </div>
+
+  <div class="stage" id="biz">
+    <figure class="diagram" style="margin:0">
+      <svg viewBox="0 0 1080 330" role="img" aria-label="A product operator asks a Sharia board for review. Board members sign opinions. Mizan records them. Users read the record and apps apply rules. When a review expires or the product changes, it goes back to the board.">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="arrowhead"/>
+          </marker>
+        </defs>
+
+        <g class="node built" data-bnode="0">
+          <rect x="16" y="90" width="200" height="96" rx="12"/>
+          <text class="t" x="116" y="128" text-anchor="middle">DeFi product operator</text>
+          <text class="s" x="116" y="150" text-anchor="middle">token, pool or vault team</text>
+        </g>
+        <g class="node built" data-bnode="1">
+          <rect x="300" y="90" width="210" height="96" rx="12"/>
+          <text class="t" x="405" y="122" text-anchor="middle">Sharia board</text>
+          <text class="s" x="405" y="144" text-anchor="middle">reviews under a named policy</text>
+          <text class="s" x="405" y="164" text-anchor="middle">AI may draft · people decide</text>
+        </g>
+        <g class="node built" data-bnode="2">
+          <rect x="594" y="90" width="200" height="96" rx="12"/>
+          <text class="t" x="694" y="128" text-anchor="middle">Mizan Oracle</text>
+          <text class="s" x="694" y="150" text-anchor="middle">record + live status</text>
+        </g>
+        <g class="node built" data-bnode="3">
+          <rect x="866" y="16" width="200" height="88" rx="12"/>
+          <text class="t" x="966" y="52" text-anchor="middle">Users &amp; investors</text>
+          <text class="s" x="966" y="74" text-anchor="middle">read the explorer</text>
+        </g>
+        <g class="node built" data-bnode="4">
+          <rect x="866" y="172" width="200" height="88" rx="12"/>
+          <text class="t" x="966" y="208" text-anchor="middle">Apps &amp; protocols</text>
+          <text class="s" x="966" y="230" text-anchor="middle">wallets, DEX, vaults</text>
+        </g>
+
+        <line class="edge" data-bedge="0" x1="217" y1="138" x2="298" y2="138" marker-end="url(#ah2)"/>
+        <text class="elabel" data-blabel="0" x="257" y="116" text-anchor="middle">asks for review</text>
+        <text class="elabel" data-blabel="0" x="257" y="162" text-anchor="middle">+ documents</text>
+
+        <line class="edge" data-bedge="1" x1="511" y1="138" x2="592" y2="138" marker-end="url(#ah2)"/>
+        <text class="elabel" data-blabel="1" x="551" y="116" text-anchor="middle">signed</text>
+        <text class="elabel" data-blabel="1" x="551" y="162" text-anchor="middle">opinions</text>
+
+        <path class="edge" data-bedge="2" d="M795 118 L830 118 L830 60 L864 60" marker-end="url(#ah2)"/>
+        <text class="elabel" data-blabel="2" x="790" y="52" text-anchor="end">who, why, until when</text>
+
+        <path class="edge" data-bedge="3" d="M795 158 L830 158 L830 216 L864 216" marker-end="url(#ah2)"/>
+        <text class="elabel" data-blabel="3" x="790" y="232" text-anchor="end">machine-readable status</text>
+
+        <path class="edge" data-bedge="4" d="M694 187 L694 268 L405 268 L405 188" marker-end="url(#ah2)"/>
+        <text class="elabel" data-blabel="4" x="549" y="258" text-anchor="middle">review expires or product changes → review again</text>
+
+        <path class="edge" data-bedge="5" d="M966 261 L966 304 L116 304 L116 188" marker-end="url(#ah2)" stroke-dasharray="6 6"/>
+        <text class="elabel" data-blabel="5" x="126" y="222" text-anchor="start">users join products</text>
+        <text class="elabel" data-blabel="5" x="126" y="238" text-anchor="start">that meet their needs</text>
+      </svg>
+    </figure>
+
+    <div class="controls">
+      <button type="button" data-act="play" aria-pressed="false">Play</button>
+      <button type="button" data-act="back">Back</button>
+      <button type="button" data-act="next">Next</button>
+      <span class="count" data-count>6 steps</span>
+    </div>
+
+    <ol class="steps">
+      <li data-step="0">
+        <span class="step-title">A product team asks for a Sharia review</span>
+        <span class="step-text">They share the contract address, version, documents and how the product earns returns.</span>
+        <div class="more"><p>The review covers one product version. Approving a token does not approve every pool or strategy that uses it.</p></div>
+      </li>
+      <li data-step="1">
+        <span class="step-title">The board reviews under a named policy</span>
+        <span class="step-text">Each member gives their own opinion: approved, rejected or needs review. An AI assistant may draft summaries, but cannot approve or sign. <span class="tag planned">AI planned</span></span>
+        <div class="more"><p>The public evidence file states the scope, the exclusions and the reasons. Its hash is part of every signature.</p></div>
+      </li>
+      <li data-step="2">
+        <span class="step-title">Mizan records the signed opinions</span>
+        <span class="step-text">The record is stored on the blockchain with each member's opinion, even when the board is split. The outcome only takes effect if enough members agree (the quorum).</span>
+        <div class="more"><p>Delivery runs through Chainlink CRE (planned). Nobody in between can change the result without breaking the signatures.</p></div>
+      </li>
+      <li data-step="3">
+        <span class="step-title">People see a readable record</span>
+        <span class="step-text">Who reviewed it, how many agreed, what was covered, why, when it was issued and when it expires.</span>
+        <div class="more"><p>An old screenshot of an approval cannot hide an expiry or a revocation. The explorer shows the live status.</p></div>
+      </li>
+      <li data-step="4">
+        <span class="step-title">Apps apply their own rules</span>
+        <span class="step-text">A wallet, swap or vault can require “current approval” before a deposit. Another app can show a warning only.</span>
+        <div class="more"><p>Mizan reports facts. The app decides. A Uniswap hook is one optional example, not the product.</p></div>
+      </li>
+      <li data-step="5">
+        <span class="step-title">Reviews renew and history stays</span>
+        <span class="step-text">When a review expires or the product changes, the board reviews again. It can revoke a record with a reason. Old records are never deleted.</span>
+        <div class="more"><p>An expired approval stays “approved, expired”. It does not turn into “rejected”. A revoked record never brings an older approval back.</p></div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="roles" aria-label="Who decides what">
+    <div class="role"><span class="who">Sharia board</span><p>Reviews the evidence under its policy.</p><span class="decides"><strong>Decides:</strong> the conclusion.</span></div>
+    <div class="role"><span class="who">Mizan</span><p>Checks signatures, stores records, reports status.</p><span class="decides"><strong>Decides:</strong> nothing religious.</span></div>
+    <div class="role"><span class="who">App or protocol</span><p>Reads the facts on-chain.</p><span class="decides"><strong>Decides:</strong> its own entry rule.</span></div>
+    <div class="role"><span class="who">User</span><p>Reads who reviewed, why and until when.</p><span class="decides"><strong>Decides:</strong> whether to take part.</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>Possible business model <span class="tag planned">hypothesis</span></h3>
+    <p>Not validated with customers yet. Fees must never depend on a positive result.</p>
+    <div class="tablewrap">
+      <table class="money">
+        <thead><tr><th scope="col">Who</th><th scope="col">Gets</th><th scope="col">Could pay for</th></tr></thead>
+        <tbody>
+          <tr><td>Sharia review teams</td><td>A workspace to publish signed, structured reviews</td><td>Subscription</td></tr>
+          <tr><td>Apps and protocols</td><td>Reliable status reads and change alerts</td><td>API and monitoring</td></tr>
+          <tr><td>Product operators</td><td>Help connecting their product to reviews</td><td>Integration support</td></tr>
+          <tr><td>Users</td><td>A clear public record</td><td>Free to read</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PART 4: SUBMISSION ============ -->
+<section class="part" id="submit" aria-labelledby="submit-h">
+  <div class="part-head">
+    <span class="kicker">Part 4 · how we present it on DoraHacks</span>
+    <h2 id="submit-h">Deck, video and live demo for Legal Hack 2026</h2>
+    <p>The plan for our BUIDL submission: what judges see first, what we still need to build, and how we show it honestly.</p>
+  </div>
+
+  <div class="team-note" role="note">
+    <strong>For our team. Remove this part before sending this page to judges.</strong>
+    <span>Event facts below come from our portal review on 29–31 October, not a fresh check. Re-read the live Build page for required fields, video length and deadline before submitting.</span>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span class="label">Deadline (as last seen)</span><span class="big">1 Nov, 08:01 WIB</span><span class="small">01:01 UTC · recheck on portal</span></div>
+    <div class="fact"><span class="label">Time left</span><span class="big" id="countdown">about 19 hours</span><span class="small">from the deadline above</span></div>
+    <div class="fact"><span class="label">Main target</span><span class="big">Bounty 1362</span><span class="small">Best workflow with CRE · 2 × US$1,000 at review time</span></div>
+    <div class="fact"><span class="label">Track</span><span class="big">LegalTech &amp; RegTech</span><span class="small">AI × Blockchain was also listed</span></div>
+  </div>
+
+  <div class="split">
+    <div class="panel">
+      <h3>What the bounty needs, and where we are</h3>
+      <ul class="check">
+        <li><span class="pill ok">done</span><span>On-chain receiver and registry for CRE reports <em>· 64 tests, Anvil smoke test</em></span></li>
+        <li><span class="pill ok">done</span><span>Per-member signatures, quorum, visible dissent, expiry and revocation</span></li>
+        <li><span class="pill ok">done</span><span>Explainer page with animations (this page)</span></li>
+        <li><span class="pill todo">missing</span><span><strong>CRE workflow</strong> that fetches signed opinions from an external API and writes them on-chain <em>· required by 1362</em></span></li>
+        <li><span class="pill todo">missing</span><span><strong>Successful CRE CLI simulation</strong> (or live deployment), with its output saved <em>· required by 1362</em></span></li>
+        <li><span class="pill todo">missing</span><span>Small public API serving the signed package and evidence JSON</span></li>
+        <li><span class="pill part">partly</span><span>Testnet deployment <em>· script ready, not run</em></span></li>
+        <li><span class="pill todo">missing</span><span>Demo video, pitch deck, BUIDL page text, public repo link</span></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3>Plan to the deadline (WIB)</h3>
+      <div class="plan">
+        <div class="row"><span class="when">Sat 13–18</span><span class="what"><strong>Build the CRE workflow first</strong><span>HTTP fetch of the signed package → read <code>latestId</code> → encode report v2 → EVM write to the receiver. Run <code>cre workflow simulate</code> until it passes.</span></span></div>
+        <div class="row"><span class="when">Sat 18–20</span><span class="what"><strong>Testnet run</strong><span>Deploy with <code>DeployNetwork.s.sol</code>, then simulate against it. Save the transaction hash, or say plainly that it was simulation only.</span></span></div>
+        <div class="row"><span class="when">Sat 20–22</span><span class="what"><strong>Record the video</strong><span>Follow the script below. One clean take per scene, then cut.</span></span></div>
+        <div class="row"><span class="when">Sat 22–24</span><span class="what"><strong>Deck</strong><span>10 slides, reuse diagrams from this page.</span></span></div>
+        <div class="row"><span class="when">Sun 00–02</span><span class="what"><strong>Submit</strong><span>Repo public, README updated, BUIDL page filled, bounty 1362 selected.</span></span></div>
+        <div class="row"><span class="when">Sun 02–08</span><span class="what"><strong>Buffer</strong><span>For upload problems and sleep. Do not start new features.</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Why judges should remember Mizan</h3>
+    <p>Most hackathon oracles move prices. Ours moves an accountable human decision, and keeps the disagreement visible.</p>
+    <div class="edge-list">
+      <div class="edge-item"><b>A real legal problem</b><span>Sharia reviews are governance documents. We make who decided, under which policy, and until when, checkable at transaction time.</span></div>
+      <div class="edge-item"><b>People decide, not AI</b><span>Each board member signs their own opinion. AI may draft but cannot sign. No “AI fatwa”.</span></div>
+      <div class="edge-item"><b>Dissent is on the record</b><span>A split board is stored as “Needs review” with counts and names. Most systems only show a green badge.</span></div>
+      <div class="edge-item"><b>Honest lifecycle</b><span>Expired is not rejected. Revoked never brings back an old approval. History is never deleted.</span></div>
+      <div class="edge-item"><b>CRE with a clear job</b><span>CRE carries data from an outside system to the chain. Board signatures and transport checks stay separate.</span></div>
+      <div class="edge-item"><b>Built and tested</b><span>64 Foundry tests, fuzzing, an Anvil smoke test, and size and gas checks for a 32-member board.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Pitch deck: 10 slides</h3>
+    <div class="slides">
+      <div class="slide"><b>Mizan Oracle</b><span>Sharia reviews that DeFi apps can check. Name, one line, team.</span></div>
+      <div class="slide"><b>The problem</b><span>An old “halal” screenshot keeps circulating. Who reviewed it? What did it cover? Is it still valid?</span></div>
+      <div class="slide"><b>Why it matters</b><span>Islamic finance is a large market with clear rules. Cite the 2025 asset figure from our PDF, labelled as industry assets, not DeFi capital.</span></div>
+      <div class="slide"><b>The idea</b><span>The board decides. Mizan keeps the record. Apps choose their rule. Use the “who decides what” strip.</span></div>
+      <div class="slide"><b>How it works</b><span>Part 1 diagram: members → API → CRE → receiver → registry → apps.</span></div>
+      <div class="slide"><b>Trust you can check</b><span>Per-member signatures, quorum, split vote stored as Needs review, expiry, revocation.</span></div>
+      <div class="slide"><b>Why CRE</b><span>Outside API to chain, workflow identity checked on-chain, nothing can be changed in transit.</span></div>
+      <div class="slide"><b>Demo</b><span>Screenshot of the split vote: 1 approved, 1 rejected, outcome Needs review. Link to the video.</span></div>
+      <div class="slide"><b>Business</b><span>Review teams, apps and operators. Fees never depend on a positive result. Marked as a hypothesis.</span></div>
+      <div class="slide"><b>Status and next steps</b><span>Built vs planned, honestly. Next: one qualified board, one product, one pilot.</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Demo video script (about 3 minutes; check the limit on the Build page)</h3>
+    <p>Use large terminal text and burned-in English captions. Many judges and users read English as a second language.</p>
+    <div class="tablewrap">
+      <table class="script">
+        <thead><tr><th scope="col">Time</th><th scope="col">On screen</th><th scope="col">Voice</th></tr></thead>
+        <tbody>
+          <tr><td>0:00–0:15</td><td>An old approval screenshot, then a question mark over the date</td><td>“This product says it is Sharia approved. By whom? Is it still valid?”</td></tr>
+          <tr><td>0:15–0:40</td><td>This page, header and “who decides what” strip</td><td>“Mizan is an oracle for Sharia reviews. The board decides. Mizan keeps the record. Apps choose their own rule.”</td></tr>
+          <tr><td>0:40–1:05</td><td>Part 1 animation playing</td><td>“Each board member signs their own opinion. Chainlink CRE carries it on-chain. The registry checks every signature.”</td></tr>
+          <tr><td>1:05–1:45</td><td>Terminal: <code>cre workflow simulate</code> passing, then <code>cast call … getOpinions</code></td><td>“Here the CRE workflow fetches the signed opinions from our API and writes them. Now anyone can see who approved and who did not.”</td></tr>
+          <tr><td>1:45–2:15</td><td>Simulator: 1 approve, 1 reject, 1 did not sign</td><td>“If the board is split, we do not hide it. The vote is public, and the result is Needs review.”</td></tr>
+          <tr><td>2:15–2:35</td><td>App rules table: click Expired, then Revoked</td><td>“Expired is not rejected. Revoked never brings back an old approval. Each app picks its own rule.”</td></tr>
+          <tr><td>2:35–2:50</td><td>Terminal: <code>forge test</code> with 64 passed</td><td>“The contracts have 64 tests, including fuzzing.”</td></tr>
+          <tr><td>2:50–3:00</td><td>Status slide</td><td>“The board here is a mock. Next, we pilot with a qualified Sharia board. Thank you.”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="panel">
+      <h3>Live demo (if judges ask)</h3>
+      <ol style="margin:0;padding-left:20px;display:grid;gap:6px">
+        <li>Open this page. Play Part 1 for 20 seconds.</li>
+        <li>Run the CRE simulation in a prepared terminal.</li>
+        <li>Read the new record with <code>resolve</code> and <code>getOpinions</code>.</li>
+        <li>Show a split vote in the simulator, then the app rules table.</li>
+        <li>End on what is real today and what is next.</li>
+      </ol>
+      <p style="color:var(--muted);font-size:.93rem">Backup: the recorded video and <code>bash scripts/anvil-smoke.sh</code>, which runs offline in about a minute.</p>
+    </div>
+    <div class="panel">
+      <h3>Never claim</h3>
+      <ul class="dont">
+        <li>That a real board or real scholar reviewed anything</li>
+        <li>That a product is certified halal</li>
+        <li>A live CRE deployment if we only ran a simulation</li>
+        <li>That a mock forwarder test is a CRE simulation</li>
+        <li>Market size as money that will flow into DeFi</li>
+        <li>That the business model is validated</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>BUIDL page text (copy and edit)</h3>
+    <div class="copybox">
+      <span class="label" style="font-weight:800;font-size:.85rem">One-liner</span>
+      <div class="text" id="copy-one">Mizan Oracle: Sharia reviews that DeFi apps can check, with every board member's opinion on-chain, delivered by Chainlink CRE.</div>
+      <button type="button" data-copy="copy-one">Copy one-liner</button>
+    </div>
+    <div class="copybox">
+      <span class="label" style="font-weight:800;font-size:.85rem">Short description</span>
+      <div class="text" id="copy-desc">Many people only use financial products that follow Sharia rules. In DeFi, they cannot easily see who reviewed a product, what the review covered, or whether it is still valid.
+
+Mizan is an oracle for Sharia reviews. Each member of a Sharia board signs their own opinion. A Chainlink CRE workflow fetches the signed opinions from an external API and writes them on-chain. Our registry checks every signature, stores who said what, and needs a quorum before an outcome takes effect. A split board is stored as “Needs review”, so disagreement stays visible. Expiry and revocation are tracked without deleting history. Apps read the facts and choose their own rule.
+
+This demo uses a mock board. It is not a real Sharia certification.</div>
+      <button type="button" data-copy="copy-desc">Copy description</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Questions judges may ask</h3>
+    <div class="qa">
+      <details><summary>Isn't this just a multisig?</summary><p>A multisig only says yes. Mizan stores each member's own opinion, the counts, the policy and evidence hash, expiry and revocation. Apps can read all of that on-chain.</p></details>
+      <details><summary>Who are the scholars?</summary><p>Today it is a mock board. We never invent names or credentials. The next step is a pilot with one qualified Sharia board.</p></details>
+      <details><summary>Why use a blockchain?</summary><p>Apps can check the review at the moment of a transaction, and nobody can quietly edit or delete a past decision.</p></details>
+      <details><summary>Why Chainlink CRE?</summary><p>The reviews live off-chain. CRE moves them on-chain through a known workflow. The receiver checks the workflow, and the registry still checks every member's signature.</p></details>
+      <details><summary>What if one member's key is stolen?</summary><p>One key alone cannot publish or revoke anything; at least the quorum must sign. The owner can deactivate that member.</p></details>
+      <details><summary>How do you make money?</summary><p>Our hypothesis: subscriptions for review teams and API access for apps. Fees never depend on a positive result. We have not validated this with customers yet.</p></details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <strong>What is real today</strong>
+  <ul>
+    <li>Registry, receiver and example consumer contracts are built, with 64 passing Foundry tests and an Anvil smoke test.</li>
+    <li>The board in this page is a mock board. No real product is certified, and no real person is shown.</li>
+    <li>The assessment API, the CRE workflow and the AI assistant are planned, not built. There is no public deployment yet.</li>
+  </ul>
+</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function stepper(rootId, n, render, delay) {
+    const root = document.getElementById(rootId);
+    root.classList.add("js");
+    const items = root.querySelectorAll("[data-step]");
+    const play = root.querySelector('[data-act="play"]');
+    const count = root.querySelector("[data-count]");
+    let i = 0, timer = null;
+
+    function go(k) {
+      i = (k + n) % n;
+      items.forEach(li => li.classList.toggle("on", Number(li.dataset.step) === i));
+      count.textContent = "Step " + (i + 1) + " of " + n;
+      render(i);
+    }
+    function start() { stop(); timer = setInterval(() => go(i + 1), delay); play.textContent = "Pause"; play.setAttribute("aria-pressed", "true"); }
+    function stop() { clearInterval(timer); timer = null; play.textContent = "Play"; play.setAttribute("aria-pressed", "false"); }
+
+    play.addEventListener("click", () => (timer ? stop() : start()));
+    root.querySelector('[data-act="next"]').addEventListener("click", () => { stop(); go(i + 1); });
+    root.querySelector('[data-act="back"]').addEventListener("click", () => { stop(); go(i - 1); });
+    items.forEach(li => {
+      li.tabIndex = 0;
+      li.addEventListener("click", () => { stop(); go(Number(li.dataset.step)); });
+      li.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); stop(); go(Number(li.dataset.step)); }
+      });
+    });
+    go(0);
+    // Play only while visible, so two diagrams don't compete for attention.
+    if (!reduce && "IntersectionObserver" in window) {
+      let userStopped = false;
+      play.addEventListener("click", () => { userStopped = !timer; });
+      new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting && !timer && !userStopped) start();
+          else if (!e.isIntersecting && timer) stop();
+        });
+      }, { threshold: 0.35 }).observe(root);
+    }
+  }
+
+  // ---- Part 1: contract flow ----
+  const centers = [76, 228, 380, 532, 684, 836, 988];
+  const stepNode = [0, 1, 2, 3, 4, 5, 5, 6];
+  const labels = ["3 signed opinions", "signed package", "report v2", "onReport()", "decoded Issue", "checking 3 signatures", "record #1 stored", "resolve(product)"];
+  const packet = document.getElementById("packet");
+  const packetLabel = document.getElementById("packet-label");
+  const flowNodes = document.querySelectorAll("#flow [data-node]");
+  const flowEdges = document.querySelectorAll("#flow [data-edge]");
+  const members = document.querySelectorAll("#flow .member");
+
+  stepper("flow", 8, i => {
+    const n = stepNode[i];
+    flowNodes.forEach(g => g.classList.toggle("on", Number(g.dataset.node) === n));
+    flowEdges.forEach(e => e.classList.toggle("on", Number(e.dataset.edge) === n - 1));
+    packet.setAttribute("transform", "translate(" + centers[n] + " 0)");
+    packetLabel.textContent = labels[i];
+    // Clamp the label so it stays inside the drawing at both ends.
+    packetLabel.setAttribute("text-anchor", n === 0 ? "start" : n === 6 ? "end" : "middle");
+    packetLabel.setAttribute("x", n === 0 ? -14 : n === 6 ? 14 : 0);
+    members.forEach((m, k) => {
+      if (i === 0) {
+        m.classList.remove("signed");
+        if (!reduce) setTimeout(() => m.classList.add("signed"), 350 + k * 450);
+        else m.classList.add("signed");
+      } else m.classList.add("signed");
+    });
+  }, 3400);
+
+  // ---- Part 1: quorum simulator ----
+  const QUORUM = 2;
+  const names = { A: "Approved", R: "Rejected", N: "Needs review" };
+  const sels = ["m1", "m2", "m3"].map(id => document.getElementById(id));
+  const outcomeSel = document.getElementById("outcome");
+  const chips = document.getElementById("q-chips");
+  const verdict = document.getElementById("q-verdict");
+
+  function checkQuorum() {
+    const v = sels.map(s => s.value);
+    const c = { A: 0, R: 0, N: 0, X: 0 };
+    v.forEach(x => c[x]++);
+    const out = outcomeSel.value;
+    const support = c[out];
+    chips.innerHTML =
+      '<span class="chip a">' + c.A + ' approved</span>' +
+      '<span class="chip r">' + c.R + ' rejected</span>' +
+      '<span class="chip n">' + c.N + ' needs review</span>' +
+      '<span class="chip">' + c.X + ' did not sign</span>';
+    const signed = 3 - c.X;
+    const dissent = signed - support;
+    if (signed < QUORUM) {
+      verdict.className = "verdict fail";
+      verdict.innerHTML = "<strong>Rejected by the registry. Nothing is stored.</strong><span>Only " + signed + " member" + (signed === 1 ? "" : "s") +
+        " signed, but at least " + QUORUM + " must sign. One member alone cannot change the record. The transaction reverts with <code>QuorumNotMet(" + signed + ", " + QUORUM + ")</code>.</span>";
+    } else if (support >= QUORUM) {
+      verdict.className = "verdict";
+      verdict.innerHTML = "<strong>Stored as “" + names[out] + "”.</strong><span>" + support + " of 3 members support it. Quorum is " + QUORUM + "." +
+        (dissent > 0 ? " The " + dissent + " different opinion" + (dissent > 1 ? "s are" : " is") + " stored too." : "") +
+        (c.X > 0 ? " Members who did not sign are not listed." : "") + "</span>";
+    } else {
+      verdict.className = "verdict warn";
+      verdict.innerHTML = "<strong>Stored as “Needs review”: no agreement.</strong><span>Only " + support + " opinion" + (support === 1 ? "" : "s") +
+        " match “" + names[out] + "”, below the quorum of " + QUORUM + ". The record is still saved, so anyone can see the counts and who said what (<code>getOpinions</code>). <code>quorumMet</code> is false, and apps that need an approval block it.</span>";
+    }
+  }
+  sels.concat(outcomeSel).forEach(s => s.addEventListener("change", checkQuorum));
+  checkQuorum();
+
+  // ---- Part 2: resolve() per state ----
+  const states = {
+    none: { rows: [["exists", "false"], ["assessmentId", "0"], ["boardActive", "true"]], note: "No record yet. Only apps with no rule let the user continue." },
+    current: { rows: [["exists", "true"], ["assessmentId", "1"], ["outcome", "Approved"], ["expired", "false"], ["revoked", "false"], ["boardActive", "true"], ["tally", "2 approved · 0 rejected · 1 needs review"], ["", "quorum 2 · board of 3 · quorumMet true"]], note: "The board approved. The approval is still within its review period." },
+    expired: { rows: [["exists", "true"], ["assessmentId", "1"], ["outcome", "Approved"], ["expired", "true", 1], ["revoked", "false"], ["boardActive", "true"], ["tally", "2 approved · 0 rejected · 1 needs review"]], note: "Still Approved: expiry does not change the board's conclusion. Apps that need a current review block it." },
+    split: { rows: [["exists", "true"], ["assessmentId", "2"], ["outcome", "NeedsReview", 1], ["expired", "false"], ["revoked", "false"], ["boardActive", "true"], ["tally", "1 approved · 1 rejected · 0 needs review"], ["", "quorum 2 · board of 3 · quorumMet false", 1], ["getOpinions(2)", "[(M1, Approved), (M3, Rejected)]"]], note: "1 approved, 1 rejected, 1 did not sign. The vote is public, but with no agreement the outcome is Needs review." },
+    review: { rows: [["exists", "true"], ["assessmentId", "2"], ["outcome", "NeedsReview", 1], ["expired", "false"], ["revoked", "false"], ["boardActive", "true"], ["tally", "1 approved · 0 rejected · 2 needs review"]], note: "The latest record wins. The app never goes back to look for an older approval." },
+    revoked: { rows: [["exists", "true"], ["assessmentId", "1"], ["outcome", "Approved"], ["expired", "false"], ["revoked", "true", 1], ["boardActive", "true"], ["getRevokers(1)", "[M1, M3]"]], note: "Revoking needs signatures from a quorum of members. The original record and its reason stay readable." },
+    suspended: { rows: [["exists", "true"], ["assessmentId", "1"], ["outcome", "Approved"], ["expired", "false"], ["revoked", "false"], ["boardActive", "false", 1]], note: "The owner paused the board, for example after a key problem. No new records until it is restored." }
+  };
+  const read = document.getElementById("read");
+  const readNote = document.getElementById("read-note");
+  const rows = document.querySelectorAll("#matrix tbody tr");
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  function showState(key) {
+    rows.forEach(r => r.classList.toggle("on", r.dataset.state === key));
+    read.innerHTML = states[key].rows.map(([k, v, warn]) =>
+      '<span class="k">' + esc(k.padEnd(14)) + '</span> <span class="' + (warn ? "x" : "v") + '">' + esc(v) + "</span>").join("\n");
+    readNote.textContent = states[key].note;
+  }
+  rows.forEach(r => {
+    r.addEventListener("click", () => showState(r.dataset.state));
+    r.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showState(r.dataset.state); } });
+  });
+  showState("current");
+
+  // ---- Part 3: business flow ----
+  const bNodes = document.querySelectorAll("#biz [data-bnode]");
+  const bEdges = document.querySelectorAll("#biz [data-bedge]");
+  const bLabels = document.querySelectorAll("#biz [data-blabel]");
+  const bStep = [
+    { nodes: [0], edges: [0] },
+    { nodes: [1], edges: [] },
+    { nodes: [2], edges: [1] },
+    { nodes: [3], edges: [2] },
+    { nodes: [4], edges: [3, 5] },
+    { nodes: [1], edges: [4] }
+  ];
+  stepper("biz", 6, i => {
+    const s = bStep[i];
+    bNodes.forEach(g => g.classList.toggle("on", s.nodes.includes(Number(g.dataset.bnode))));
+    bEdges.forEach(e => e.classList.toggle("on", s.edges.includes(Number(e.dataset.bedge))));
+    bLabels.forEach(t => t.classList.toggle("on", s.edges.includes(Number(t.dataset.blabel))));
+  }, 3600);
+  // ---- Part 4: countdown and copy buttons ----
+  const deadline = Date.UTC(2026, 10, 1, 1, 1); // 1 Nov 2026, 08:01 WIB, as last seen on the portal
+  const cd = document.getElementById("countdown");
+  function tick() {
+    const ms = deadline - Date.now();
+    if (ms <= 0) { cd.textContent = "Deadline passed"; return; }
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    cd.textContent = h + " h " + String(m).padStart(2, "0") + " min";
+  }
+  tick(); setInterval(tick, 30000);
+  document.querySelectorAll("[data-copy]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = document.getElementById(btn.dataset.copy).textContent;
+      const label = btn.textContent;
+      const done = msg => { btn.textContent = msg; setTimeout(() => (btn.textContent = label), 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => done("Copied"), () => done("Select the text to copy"));
+      } else done("Select the text to copy");
+    });
+  });
+})();
+</script>
+</body>
+</html>

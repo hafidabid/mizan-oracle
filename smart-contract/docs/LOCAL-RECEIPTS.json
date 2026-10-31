@@ -1,0 +1,70 @@
+{
+  "chainId": 31337,
+  "note": "Local Anvil only. No public-chain deployment or CRE workflow.",
+  "receipts": [
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0x816651348de8a7812eab0b0af2d2d2bd8b9b7961cadf9756f750eea48ba9e335",
+      "status": "0x1",
+      "contractAddress": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+      "blockNumber": "0x1",
+      "gasUsed": "0x230f03"
+    },
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0xe09479ec98392b1f845369553ceec2ffe0e27c0b12727d86d9ecaef334d6a720",
+      "status": "0x1",
+      "contractAddress": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      "blockNumber": "0x1",
+      "gasUsed": "0x33c75"
+    },
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0xdfdec7b52fc6d1dd0e696b4761e9403554c9a7259bd0e60bca70a10683097e13",
+      "status": "0x1",
+      "contractAddress": "0x9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+      "blockNumber": "0x1",
+      "gasUsed": "0xad673"
+    },
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0x326bf596668dd0270eb450b511743c13c8bfdb32895a76947b7fceb3aa96852c",
+      "status": "0x1",
+      "contractAddress": null,
+      "blockNumber": "0x1",
+      "gasUsed": "0xc369"
+    },
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0x9564c20b172a028b71b015b7ef0bc71b3a7bf056204a0041cbb7690bfc45bdde",
+      "status": "0x1",
+      "contractAddress": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
+      "blockNumber": "0x1",
+      "gasUsed": "0x4f675"
+    },
+    {
+      "script": "DeployLocal.s.sol",
+      "transactionHash": "0xfc01fa896a2f8c5a30bc3a82743cb82c27e29c6499dc946f9236afe8212d0a25",
+      "status": "0x1",
+      "contractAddress": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+      "blockNumber": "0x1",
+      "gasUsed": "0x10600"
+    },
+    {
+      "script": "LocalDemo.s.sol",
+      "transactionHash": "0x6d999c6f95f579c312d6c3fcb919fc96cccbfca16f5e7f465023da525bd38dd8",
+      "status": "0x1",
+      "contractAddress": null,
+      "blockNumber": "0x4",
+      "gasUsed": "0x2fd32"
+    },
+    {
+      "script": "LocalDemo.s.sol",
+      "transactionHash": "0x4691327a140d1d900216cb3cb6d658615a1f1098bf369b95a1c4926bac08044c",
+      "status": "0x1",
+      "contractAddress": null,
+      "blockNumber": "0x2",
+      "gasUsed": "0x56941"
+    }
+  ]
+}

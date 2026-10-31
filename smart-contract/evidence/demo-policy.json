@@ -1,0 +1,7 @@
+{
+  "name": "Mizan Demo Policy v1",
+  "demo": true,
+  "issuer": "Mock Sharia Board",
+  "scope": "Illustrative review of supplied product documents only.",
+  "limitations": "Not a scholarly standard, fatwa, audit, or certification. No real product is approved."
+}

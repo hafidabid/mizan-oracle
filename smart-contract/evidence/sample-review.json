@@ -1,0 +1,10 @@
+{
+  "demo": true,
+  "issuer": "Mock Sharia Board",
+  "subjectVersion": "mock-contract-v1",
+  "scope": "Identity-only mock contract and fictional documentation.",
+  "exclusions": ["Trading pools", "Lending strategies", "Future upgrades", "Investment safety"],
+  "rationale": "Illustrative approval used only to demonstrate signed data delivery.",
+  "aiAssisted": false,
+  "limitations": "No qualified Sharia board has assessed or certified this sample."
+}
