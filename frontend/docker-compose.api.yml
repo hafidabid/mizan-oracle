@@ -1,0 +1,41 @@
+# Self-hosted backend for the dashboard (api/*.ts) — see README "Self-hosting the API".
+# Needs a .env next to this file (copy .env.example; SEPOLIA_RPC_URL, WORKFLOW_RESOLVE_SECRET,
+# CORS_ALLOW_ORIGINS). KV is provided by Redis behind an Upstash-compatible REST proxy,
+# so pending proposals persist across restarts without an Upstash account.
+name: mizan-oracle
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 8787
+      KV_REST_API_URL: http://kv-rest:80
+      KV_REST_API_TOKEN: ${KV_REST_API_TOKEN:?set KV_REST_API_TOKEN in .env}
+    ports:
+      - "127.0.0.1:${API_HOST_PORT:-3094}:8787"
+    depends_on:
+      - kv-rest
+
+  kv-rest:
+    image: hiett/serverless-redis-http:latest
+    restart: unless-stopped
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${KV_REST_API_TOKEN}
+      SRH_CONNECTION_STRING: redis://redis:6379
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:

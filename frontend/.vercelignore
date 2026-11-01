@@ -1,0 +1,2 @@
+# The API (api/*.ts) is self-hosted via docker-compose.api.yml, not deployed as Vercel functions.
+/api
