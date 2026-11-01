@@ -73,7 +73,7 @@ const SS = {
 /** Fictional demo records from an illustrative Shari’ah board. Not real rulings. */
 export const REVIEWS: Review[] = [
   {
-    id: 'token', rec: 'MZN-001', name: 'Sample Token A', version: 'v1.2.0', type: 'Token', chain: 'Example Chain',
+    id: 'token', rec: 'MZN-001', name: 'Qamar Compute Token (QMR)', version: 'v1.2.0', type: 'Token', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Active', issue: '2026-10-12', expiry: '2027-10-12',
     scope: 'Token contract v1.2.0 and its stated distribution', desc: 'Utility token with a fixed supply and a stated distribution schedule',
     evidence: ['Token whitepaper v1.2', 'Audited contract source at tag v1.2.0', 'Issuer questionnaire and cap table'],
@@ -84,7 +84,7 @@ export const REVIEWS: Review[] = [
     vote: [3, 0],
   },
   {
-    id: 'pool', rec: 'MZN-002', name: 'Sample Pool B', version: 'v2.0', type: 'DeFi Pool', chain: 'Example Chain',
+    id: 'pool', rec: 'MZN-002', name: 'Sahara Swap QMR/HJZ Pool', version: 'v2.0', type: 'DeFi Pool', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Active', issue: '2026-10-20', expiry: '2027-10-20',
     scope: 'Spot-swap pool mechanism and fee model, v2.0', desc: 'Liquidity pool that earns a share of swap fees',
     evidence: ['Pool specification', 'Fee and incentive description', 'Pool contract and risk controls'],
@@ -96,7 +96,7 @@ export const REVIEWS: Review[] = [
     vote: [3, 0],
   },
   {
-    id: 'vault', rec: 'MZN-003', name: 'Sample Vault C', version: 'v1.0', type: 'Yield Vault', chain: 'Example Chain',
+    id: 'vault', rec: 'MZN-003', name: 'Silk Road Trade Finance Vault', version: 'v1.0', type: 'Yield Vault', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Expired', issue: '2024-06-30', expiry: '2025-06-30', statusDate: '2025-06-30',
     statusNote: 'The 12-month period ended and the issuer did not request renewal.',
     scope: 'Profit-sharing strategy as described in memo v1.0', desc: 'Profit-sharing vault that deploys into trade finance',
@@ -111,10 +111,10 @@ export const REVIEWS: Review[] = [
     holders: 'The approval expired and was never withdrawn. Income received up to 30 Jun 2025 stands, after purification. Holding after that date is unreviewed.',
   },
   {
-    id: 'bridge', rec: 'MZN-004', name: 'Sample Bridge D', version: 'March 2026 release', type: 'Token', chain: 'Example Chain',
+    id: 'bridge', rec: 'MZN-004', name: 'Oasis Bridge', version: 'March 2026 release', type: 'Token', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Needs review', issue: '2026-03-04', expiry: '2027-03-04', statusDate: '2026-09-22',
     statusNote: 'A September 2026 contract upgrade changed the fee logic. The board is reassessing.',
-    scope: 'Bridge mechanism as of the March 2026 release', desc: 'Cross-chain bridge that locks a token and mints a 1:1 receipt',
+    scope: 'Bridge mechanism as of the March 2026 release', desc: 'Cross-chain bridge from Ethereum to Base that locks a token and mints a 1:1 receipt',
     evidence: ['Bridge architecture', 'Transfer-risk analysis'],
     excl: ['The September 2026 contract upgrade'],
     refs: [SS.ijarah, SS.online],
@@ -124,7 +124,7 @@ export const REVIEWS: Review[] = [
     holders: 'Hold existing positions, but do not add to them, until the board publishes its reassessment. The approval does not cover the upgraded contract, and the oracle answers false meanwhile.',
   },
   {
-    id: 'lend', rec: 'MZN-005', name: 'Sample Pool E', version: 'v1.0', type: 'DeFi Pool', chain: 'Example Chain',
+    id: 'lend', rec: 'MZN-005', name: 'Harbor Lend USDC Pool', version: 'v1.0', type: 'DeFi Pool', chain: 'Ethereum',
     conclusion: 'Not approved', status: 'Closed', issue: '2026-05-10', expiry: null, statusDate: '2026-05-10',
     statusNote: 'Not approved at review. Lenders earn a fixed rate on money lent.',
     scope: 'Interest-bearing lending mechanism', desc: 'Lending pool with a fixed interest-rate model',
@@ -137,10 +137,10 @@ export const REVIEWS: Review[] = [
     holders: 'Not approved. A holder seeking compliance should exit and give any interest received to charity.',
   },
   {
-    id: 'rent', rec: 'MZN-006', name: 'Sample Vault F', version: 'v1.1', type: 'Yield Vault', chain: 'Example Chain',
+    id: 'rent', rec: 'MZN-006', name: 'Marina Tower Dubai Rental Vault', version: 'v1.1', type: 'Yield Vault', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Withdrawn', issue: '2025-11-20', expiry: '2026-11-20', statusDate: '2026-08-14',
     statusNote: 'Retracted after the board learned that the leased assets were never transferred to the vault.',
-    scope: 'Rental-income strategy over documented assets', desc: 'Vault that passes through rent from leased real assets',
+    scope: 'Rental-income strategy over documented assets', desc: 'Vault that passes through rent from leased apartments in a Dubai Marina tower',
     evidence: ['Asset documents', 'Cash-flow model', 'Vault contract source'],
     excl: ['Everything. The approval is void from the date of issue.'],
     refs: [SS.ijarah],
@@ -151,7 +151,7 @@ export const REVIEWS: Review[] = [
     holders: 'Exit. Purify all distributions received since issue, apart from any return of your own capital. The approval is void, not just ended.',
   },
   {
-    id: 'asset', rec: 'MZN-007', name: 'Sample Token G', version: 'v1', type: 'Token', chain: 'Example Chain',
+    id: 'asset', rec: 'MZN-007', name: 'Hijaz Commodity Token (HJZ)', version: 'v1', type: 'Token', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Replaced', issue: '2025-08-01', expiry: '2026-08-01', statusDate: '2026-07-20',
     statusNote: 'Version 2 was reviewed and is now covered by MZN-008.',
     scope: 'Token version 1 design only', desc: 'Asset-backed token, version 1',
@@ -164,7 +164,7 @@ export const REVIEWS: Review[] = [
     holders: 'Version 1 holdings remained approved until 20 Jul 2026. Migrate to version 2, which has its own approval (MZN-008).',
   },
   {
-    id: 'asset2', rec: 'MZN-008', name: 'Sample Token G', version: 'v2', type: 'Token', chain: 'Example Chain',
+    id: 'asset2', rec: 'MZN-008', name: 'Hijaz Commodity Token (HJZ)', version: 'v2', type: 'Token', chain: 'Ethereum',
     conclusion: 'Approved', status: 'Active', issue: '2026-07-20', expiry: '2027-07-20',
     scope: 'Token version 2 design, including the new redemption window', desc: 'Asset-backed token, version 2',
     evidence: ['Custody agreement (amended)', 'Redemption terms v2', 'Contract source v2'],
@@ -173,6 +173,19 @@ export const REVIEWS: Review[] = [
     takyif: 'A certificate of undivided ownership in custodied assets, in the manner of investment sukuk.',
     screens: { riba: 'Backed by owned assets, no interest.', gharar: 'Custody and redemption disclosed.', maysir: 'None found.', activity: 'Assets are lawful commodities.' },
     vote: [3, 0], supersedes: 'MZN-007',
+  },
+  {
+    id: 'brew', rec: 'MZN-009', name: 'Copper Kettle Brewery (BREW)', version: 'v1.0', type: 'Token', chain: 'Ethereum',
+    conclusion: 'Not approved', status: 'Closed', issue: '2026-09-08', expiry: null, statusDate: '2026-09-08',
+    statusNote: 'Not approved at review. The underlying business brews and sells beer.',
+    scope: 'Revenue-share token over a craft brewery and its taprooms', desc: 'Token that pays holders a share of a brewery’s monthly sales',
+    evidence: ['Revenue-share agreement', 'Brewery financial statements', 'Token contract source'],
+    excl: ['Not applicable'],
+    refs: [SS.financialPaper],
+    takyif: 'A certificate entitling the holder to a share of a business’s sales, in the manner of shares in that business.',
+    screens: { riba: 'Not assessed further once the activity screen failed.', gharar: 'Revenue terms are disclosed.', maysir: 'None found.', activity: 'Core business is brewing and selling alcohol (khamr), which is prohibited. Not within any tolerance.' },
+    vote: [3, 0],
+    holders: 'Not approved. A holder seeking compliance should exit and give any distributions received to charity.',
   },
 ];
 

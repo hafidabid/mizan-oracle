@@ -1,10 +1,10 @@
-import { Brand, SECTIONS } from './Nav';
-import { Rosette, Twinkles } from './Ornament';
+import { Brand, SECTIONS } from "./Nav";
+// import { Rosette, Twinkles } from "./Ornament";
 
 export function Footer() {
   return (
     <>
-      <section className="ayah-band" aria-label="The name Mizan">
+      {/* <section className="ayah-band" aria-label="The name Mizan">
         <Twinkles />
         <Rosette size={620} className="orn-ayah" />
         <div className="wrap">
@@ -18,7 +18,7 @@ export function Footer() {
             <figcaption>Qur’an, Sūrat al-Raḥmān 55:7–9, Sahih International translation. Mīzān means the balance.</figcaption>
           </figure>
         </div>
-      </section>
+      </section> */}
       <footer>
         <div className="wrap foot-row">
           <span className="brand">
@@ -32,7 +32,11 @@ export function Footer() {
             ))}
             <a href="#request">Request a review</a>
           </nav>
-          <p>Every record on this page is fictional demo data from an illustrative Shari’ah board, and dates are fixed at 29 Oct 2026. It is not a Shari’ah ruling, an audit opinion or financial advice.</p>
+          <p>
+            Every record on this page is fictional demo data from an
+            illustrative Shari’ah board, and dates are fixed at 29 Oct 2026. It
+            is not a Shari’ah ruling, an audit opinion or financial advice.
+          </p>
         </div>
       </footer>
     </>

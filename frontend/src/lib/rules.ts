@@ -90,7 +90,7 @@ export function demoHex(seed: string, len: number): string {
   return out.slice(0, len);
 }
 
-/** Example Chain makes a block every 12 seconds; block 18,000,000 fell on 1 Jan 2024. */
+/** Ethereum makes a block every 12 seconds; block 18,000,000 fell on 1 Jan 2024. */
 export const blockFor = (iso: string) => 18_000_000 + daysBetween(parseDate('2024-01-01'), parseDate(iso)) * 7200 + (hash32(iso) % 7000);
 
 export const BOARD_KEY = `0x${demoHex('board', 40)}`;

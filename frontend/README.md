@@ -14,7 +14,7 @@ camera down a road from dawn to night, so the story and the UI move together:
 | --- | --- | --- |
 | Hero | Dawn | A brass mizan (balance scale) on a stone plinth. It tips out of balance when you pick the expired Yield Vault. |
 | How it works | Morning to midday | Five paper gates over the road. The gate you're walking through turns gold and the panel shows that step. |
-| Status over time | Afternoon to sunset | An hourglass. Scrolling runs Sample Token A's review year. The sun sets when the period ends on 12 Oct 2027 and the status flips to Expired. |
+| Status over time | Afternoon to sunset | An hourglass. Scrolling runs Qamar Compute Token's review year. The sun sets when the period ends on 12 Oct 2027 and the status flips to Expired. |
 | Register | Dusk | City windows and road lamps light up behind a searchable table of sample records. |
 | Closing | Night | Sky lanterns rise over the valley. |
 

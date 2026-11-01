@@ -3,7 +3,7 @@ import { type Review } from '../data/reviews';
 /** The demo's fixed "today", so day counts stay stable for every viewer. */
 export const TODAY = parseDate('2026-10-29');
 
-/** Sample Token A's review period, used by the status-over-time section. */
+/** Qamar Compute Token's review period, used by the status-over-time section. */
 export const ISSUE = parseDate('2026-10-12');
 export const PERIOD_DAYS = 365;
 /** The section runs a little past expiry, to February 2028. */

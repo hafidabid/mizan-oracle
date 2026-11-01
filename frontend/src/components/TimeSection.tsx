@@ -19,7 +19,7 @@ const JUMPS: Array<[string, number]> = [
 
 const EXPIRY_PCT = (PERIOD_DAYS / TIMELINE_DAYS) * 100;
 
-/** Sample Token A's review year. The status flips to Expired when the period ends; the conclusion does not change. */
+/** Qamar Compute Token's review year. The status flips to Expired when the period ends; the conclusion does not change. */
 export function TimeSection({ sectionRef, day, onJump, staticMode }: Props) {
   const active = day <= PERIOD_DAYS;
   const status = active ? 'Active' : 'Expired';
@@ -29,7 +29,7 @@ export function TimeSection({ sectionRef, day, onJump, staticMode }: Props) {
         <span className="sec">§3</span> An approval has a sunset
       </h2>
       <p className="lede">
-        {staticMode ? 'Move the date to run' : 'Scroll to run'} Sample Token A’s 12-month review period. When it ends, the status changes. The board’s conclusion stays on the record, unchanged.
+        {staticMode ? 'Move the date to run' : 'Scroll to run'} Qamar Compute Token’s 12-month review period. When it ends, the status changes. The board’s conclusion stays on the record, unchanged.
       </p>
       <div className="date-big">
         <b>{formatDate(addDays(ISSUE, day))}</b>
