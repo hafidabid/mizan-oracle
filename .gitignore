@@ -53,3 +53,7 @@ Thumbs.db
 !.vscode/settings.json
 *.swp
 *~
+
+pitch-video
+# DoraHacks submission draft and assets
+dorahack/
